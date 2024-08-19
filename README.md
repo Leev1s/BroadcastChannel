@@ -1,4 +1,4 @@
-# 欢迎访问 [LoserTalk](https://channel.lev1s.cn)
+# [LoserTalk](https://loser.lev1s.cn)
 
 # BroadcastChannel
 
