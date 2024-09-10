@@ -84,12 +84,12 @@ a:hover {
 
 a.-title:link,
 a.-title:visited {
-  color: #ffffff;
+  color: var(--highlight-color);
   text-decoration: none;
 }
 
 a.site-title:hover {
-  color: var(--highlight-color);
+  color: #000;
   text-decoration: underline;
 }
 
