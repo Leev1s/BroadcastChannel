@@ -1,6 +1,6 @@
 :root {
   --background-color: #1d1259;
-  --foreground-color: #000000;
+  --foreground-color: #dddddd;
   --highlight-color: orangered;
   --box-border-radius: 3px;
   --media-border-radius: 8px;
@@ -84,7 +84,7 @@ a:hover {
 
 a.site-title:link,
 a.site-title:visited {
-  color: #333;
+  color: #ffffff;
   text-decoration: none;
 }
 
