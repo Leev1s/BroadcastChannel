@@ -84,7 +84,7 @@ a:hover {
 
 a.-title:link,
 a.-title:visited {
-  color: var(--highlight-color);
+  color: orangered;
   text-decoration: none;
 }
 
