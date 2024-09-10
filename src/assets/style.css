@@ -70,7 +70,7 @@ body {
 }
 
 a:link,
-a:visited {
+a:vid {
   color: #778087;
   text-decoration: none;
   line-break: loose;
@@ -82,14 +82,14 @@ a:hover {
   text-underline-offset: 0.2rem;
 }
 
-a.site-title:link,
-a.site-title:visited {
+a.-title:link,
+a.-title:visited {
   color: #ffffff;
   text-decoration: none;
 }
 
 a.site-title:hover {
-  color: #000;
+  color: var(--highlight-color);
   text-decoration: underline;
 }
 
