@@ -72,17 +72,18 @@ body {
 a:link {
   color: #61b3ff;
 }
-
 a:vid {
   color: #778087;
   text-decoration: none;
   line-break: loose;
 }
-
 a:hover {
   color: var(--link-color);
   text-decoration: underline;
   text-underline-offset: 0.2rem;
+}
+a:visited {
+  color: #dfe5eb;
 }
 
 a.-title:link,
@@ -98,13 +99,16 @@ a.site-title:link {
 a.site-title:hover {
   text-decoration: underline;
 }
+a.site-title:visited{
+  color: var(--link-color);
+  text-decoration: none;
+}
 
 a.item-link:link,
 a.item-link:visited {
   color: var(--link-color);
   text-decoration: none;
 }
-
 a.item-link:hover {
   text-decoration: underline;
 }
