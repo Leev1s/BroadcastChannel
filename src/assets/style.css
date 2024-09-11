@@ -69,7 +69,10 @@ body {
   cursor: pointer;
 }
 
-a:link,
+a:link {
+  color: #61b3ff;
+}
+
 a:vid {
   color: #778087;
   text-decoration: none;
@@ -77,7 +80,7 @@ a:vid {
 }
 
 a:hover {
-  color: #4d5256;
+  color: var(--link-color);
   text-decoration: underline;
   text-underline-offset: 0.2rem;
 }
@@ -88,8 +91,11 @@ a.-title:visited {
   text-decoration: none;
 }
 
+a.site-title:link {
+  color: var(--link-color);
+  text-decoration: none;
+}
 a.site-title:hover {
-  color: #000;
   text-decoration: underline;
 }
 
