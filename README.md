@@ -1,5 +1,3 @@
-# [LoserTalk](https://loser.lev1s.cn)
-
 # BroadcastChannel
 
 **Turn your Telegram Channel into a MicroBlog.**
