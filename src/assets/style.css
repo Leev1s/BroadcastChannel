@@ -14,7 +14,7 @@
   --icon-hover-filter: invert(51%) sepia(0%) saturate(0%) hue-rotate(23deg) brightness(90%) contrast(90%);
   --icon-secondary-filter: invert(97%) sepia(0%) saturate(0%) hue-rotate(129deg) brightness(86%) contrast(88%);
   --cell-background-color: unset;
-  --code-background-color: #f9f9f9;
+  --code-background-color: rgba(255, 255, 255, 0.08);
   --secondary-color: #999;
 }
 
@@ -71,18 +71,13 @@ body {
 a:link {
   color: #61b3ff;
 }
-a:vid {
-  color: #778087;
-  text-decoration: none;
-  line-break: loose;
-}
 a:hover {
   color: var(--link-color);
   text-decoration: underline;
   text-underline-offset: 0.2rem;
 }
 a:visited {
-  color: #dddddd;
+  color: #b8b8d8;
   text-decoration: underline;
 }
 
