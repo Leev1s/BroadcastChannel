@@ -1,15 +1,15 @@
 import type { APIRoute } from 'astro'
-import { getEnv } from '../lib/env'
+import { getStaticProxy } from '../lib/env'
 import { getChannelInfo } from '../lib/telegram'
 
-const MANIFEST_THEME_COLOR = '#f4f1ec'
+const MANIFEST_THEME_COLOR = '#ffffff'
 const FALLBACK_MANIFEST_NAME = 'BroadcastChannel'
 
 export const GET: APIRoute = async (context) => {
   const { SITE_URL } = context.locals
-  const channel = await getChannelInfo(context)
+  const channel = await getChannelInfo()
   const absoluteSiteUrl = SITE_URL.startsWith('http') ? SITE_URL : new URL(SITE_URL, context.url.origin).toString()
-  const staticProxy = getEnv(import.meta.env, context, 'STATIC_PROXY') ?? '/static/'
+  const staticProxy = getStaticProxy(import.meta.env)
   const siteName = channel.title || FALLBACK_MANIFEST_NAME
   const avatarIcon = channel.avatar?.startsWith('http')
     ? new URL(`${staticProxy}${channel.avatar}`, absoluteSiteUrl).toString()

@@ -1,159 +1,69 @@
-# Repository Guidelines for Coding Agents
+# Repository Guide for Coding Agents
 
-## 1. Scope
+## Sources
 
-- This repository is an Astro 5 SSR site that turns Telegram channels into a microblog.
-- Use this file as the main repo-specific guide for coding agents working in this project.
-- Prefer small, surgical changes that match the existing code style and structure.
-- Assume server-rendered HTML is the default; client-side JavaScript is intentionally minimal.
+- Treat this file as the maintained repo guide. `CLAUDE.md` is a symlink to this file for Claude Code compatibility.
+- No repo-local `opencode.json`, `.opencode/`, `.cursor/rules/`, `.cursorrules`, or `.github/copilot-instructions.md` is present.
+- For any visible UI/design change, read `DESIGN.md` first; implementation tokens live in `src/styles/app/**` and `src/styles/content/**`.
+- Theme provenance and third-party acknowledgements are maintained in `NOTICE.md`.
 
-## 2. Instruction Sources
+## Theme provenance
 
-- Root `AGENTS.md` is the maintained agent guide for this repository.
-- No `.cursor/rules/**`, `.cursorrules`, or `.github/copilot-instructions.md` files were found.
-- If Cursor or Copilot rules are added later, merge them into this file.
-- `CLAUDE.md` is an older short copy; prefer this file when they disagree.
+- Base is the default Bear-compatible theme; bundled optional overrides live under `public/themes/`.
+- Every newly bundled theme must add or update its own `NOTICE.md` entry in the same change, including the upstream project URL, author or copyright holder, license and license URL, and whether the implementation is inspired by or adapted from the upstream work.
+- Also update the README theme credits when a bundled theme is added or its provenance changes.
+- Do not copy upstream theme code unless its license compatibility and notice requirements have been reviewed. Distinguish visual inspiration from source adaptation accurately.
 
-## 3. Project Snapshot
+## Stack and commands
 
-- Package manager: `pnpm` only.
-- Preferred Node version: `v22`.
-- Framework: `astro@5`.
-- Lint stack: `eslint@9` + `@antfu/eslint-config` + `eslint-plugin-astro` + `eslint-plugin-format`.
-- Styling: Tailwind CSS v4 via `@tailwindcss/vite`.
+- Runtime/tooling: Node `v22`, `pnpm@11.6.0`, Astro `^6.4.6` SSR, Tailwind CSS v4 via `@tailwindcss/vite`, ESLint `^10.4.1` with Antfu + Astro + formatter rules.
+- Install/dev/build: `pnpm install`, `pnpm dev` or `pnpm start` (`astro dev`), `pnpm build`, `pnpm preview`.
+- Local checks: `pnpm lint`, `pnpm typecheck`, and `pnpm test`; use `pnpm lint:fix` for auto-fix, `pnpm eslint <path>` for focused lint, and `pnpm vitest run <test-file>` for a focused test.
+- `postinstall` installs `simple-git-hooks` when `.git` exists; pre-commit runs `lint-staged` with `eslint --fix`.
+- CI does not validate app behavior: `docker.yml` only builds/pushes the GHCR image, and `sync.yml` only syncs forks from upstream.
 
-## 4. Repository Map
+## Validation shortcuts
 
-- `src/pages/`: Astro pages and API-style route handlers.
-- `src/components/`: reusable UI pieces and page fragments.
-- `src/layouts/`: page shells like `base.astro`.
-- `src/lib/`: Telegram fetching, parsing, env access, proxying, and shared logic.
-- `src/types.ts`: shared domain interfaces.
-- `dist/`, `.astro/`, and `node_modules/`: generated output; do not hand-edit.
+- Small code change: `pnpm eslint <changed-file>`, `pnpm typecheck`, and `pnpm test`; run `pnpm lint` if scope widened.
+- UI or route change: `pnpm lint`, `pnpm build`, then preview/manual check.
+- Feed/SEO/sitemap changes: manually verify `/rss.xml`, `/rss.json`, `/sitemap.xml`, and relevant canonical/meta output in preview.
+- Telegram parsing or proxy changes: verify home, one `/posts/[id]` page, RSS output, and a `/static/...` asset path.
+- Build config or adapter changes must finish with `pnpm build`.
 
-## 5. Core Commands
+## Architecture notes
 
-```bash
-pnpm install
-pnpm dev
-pnpm start
-pnpm build
-pnpm preview
-pnpm lint:fix
-```
+- `src/pages/` contains Astro pages and API-style routes; `src/pages/index.astro` is intentionally thin and calls `getChannelInfo()`.
+- `src/layouts/BaseLayout.astro` wires global CSS, `astro-seo`, the site header/navigation, RSS links, `HEADER_INJECT`, and `FOOTER_INJECT`.
+- `src/middleware.ts` sets `SITE_URL`/`RSS_URL` locals, handles legacy `#tag` search rewrites, and adds speculation/cache headers.
+- Telegram fetching/parsing belongs in `src/lib/telegram/**`; request caching uses `ocache` with 5 min max age, SWR enabled, and 1 hour stale max age.
+- Shared env helpers are in `src/lib/env.ts`; runtime `process.env` wins over build-time `import.meta.env`, and they do not read `Astro.locals.runtime.env`.
+- Static proxy logic is shared in `src/lib/static-proxy.ts`; both Astro route `src/pages/static/[...url].ts` and Vercel Edge Function `api/static/index.ts` use it, with `/static/:path*` rewritten by `vercel.json`.
+- Do not broaden the static proxy target whitelist unless the task explicitly changes the security model.
+- Keep shared domain interfaces in `src/types.ts`; there are no TS path aliases, so use relative imports.
 
-- `pnpm eslint <path>` is the supported focused lint command.
-- Use `pnpm astro ...` only when a task specifically needs extra Astro CLI behavior.
+## Env and deployment gotchas
 
-## 6. Testing Reality
+- `CHANNEL` is required server-side; missing it throws during Telegram fetch.
+- `TELEGRAM_HOST` defaults in code to `telegram.me`; `.env.example` uses `telegram.dog` as an override example.
+- `STATIC_PROXY` defaults to `/static/` only when unset; set it to an empty string for direct Telegram asset URLs.
+- `astro.config.mjs` selects adapters for Vercel, Cloudflare Workers, Netlify, Node standalone, and EdgeOne; `SERVER_ADAPTER` overrides auto-detection, and Cloudflare Pages is explicitly rejected.
+- EdgeOne is detected from std-env's `edgeone_pages` provider or platform-provided `EDGEONE_PROJECT_ID`/`EO_MAKERS`; `DOCKER=true` changes Vite SSR `noExternal` behavior.
+- If env behavior changes, update `.env.example` and README docs together.
 
-- There is currently **no automated test runner** in this repo.
-- There is no `pnpm test` script.
-- No Vitest, Jest, Playwright, or Cypress config files are present.
-- No `*.test.*` or `*.spec.*` files are present.
+## Code and content conventions
 
-### Single-test guidance
+- Server-rendered HTML is the default; keep browser JS near zero. Telegram comments are the deliberate exception.
+- API-style routes must return `Response`/`Response.json`, not Express-like objects.
+- Follow ESLint formatting: 2 spaces, LF, UTF-8, single quotes, usually no semicolons; let `pnpm lint:fix` settle import order.
+- Preserve local naming: Astro components and layouts use `PascalCase.astro`; pages follow Astro route syntax.
+- External Telegram HTML must be sanitized via `src/lib/sanitize.ts` before `set:html`; config injections in `BaseLayout.astro` are the only intentional raw HTML path.
+- Design changes should preserve the content-first Base contract from `DESIGN.md`; Sepia is an optional warm-paper override, not the default. Avoid card-heavy redesigns unless explicitly requested.
 
-- There is currently **no supported "run a single test" command**.
-- If asked to run a single test, say so explicitly instead of inventing a command.
-- Use `pnpm eslint <path>` for a narrow static check.
-- Use `pnpm build && pnpm preview` plus manual route verification for behavior checks.
+## Cloned Dependency Source
 
-## 7. Recommended Validation
+Read-only dependency source repositories are available under
+`.slim/clonedeps/repos/` for inspection. Do not edit these clones.
 
-- Small refactor or one-file logic change: `pnpm eslint <file>` then `pnpm lint`.
-- UI or route change: `pnpm lint`, then `pnpm build`, then `pnpm preview`.
-- Feed, metadata, or sitemap change: verify `/rss.xml`, `/rss.json`, and `/sitemap.xml` manually in preview.
-- Telegram parsing or proxy change: validate home, one post page, RSS output, and the relevant `/static/...` path.
-- Env/config change: update docs and validate behavior with representative env values.
-
-## 8. Formatting Rules
-
-- Follow ESLint as the formatting source of truth; do not fight the auto-fixer.
-- Indentation: 2 spaces.
-- Line endings: LF.
-- Charset: UTF-8.
-- Quotes: single quotes.
-- Semicolons are typically omitted.
-- Trailing commas should follow linter/formatter output.
-- Do not do unrelated whitespace churn.
-
-## 9. Imports
-
-- Use `import type` for type-only imports.
-- Keep side-effect imports explicit, e.g. CSS, locale packs, and Prism language loaders.
-- No path aliases are configured in `tsconfig.json`; use relative imports.
-- Let ESLint decide final import ordering; run `pnpm lint:fix` after adding or moving imports.
-- Avoid unused imports.
-
-## 10. Naming Conventions
-
-- Keep route filenames aligned with Astro routing: `index.astro`, `[id].astro`, `[...url].ts`, `rss.xml.ts`, etc.
-- Reusable new Astro components should prefer `PascalCase.astro`.
-- Preserve neighboring conventions when editing older lowercase Astro files like `header.astro`, `item.astro`, or `base.astro`.
-- New helper modules should use descriptive kebab-case names when that matches existing utilities.
-- Environment variables use uppercase snake case.
-- Shared interfaces and types use PascalCase names.
-
-## 11. Types
-
-- Prefer explicit interfaces for shared domain shapes in `src/types.ts`.
-- Keep shared type definitions centralized instead of re-declaring them across files.
-- Prefer narrow unions when the allowed values are known, e.g. `'text' | 'service'`.
-- Avoid `any`; use `unknown`, proper interfaces, or generics.
-- Type exported handlers and helpers when practical, e.g. `APIRoute`, explicit return types, or typed props.
-- In Astro files, keep prop shapes obvious near the top of frontmatter.
-
-## 12. Astro and UI Patterns
-
-- Keep page frontmatter focused on loading data and preparing view state.
-- Push reusable logic into `src/lib/` instead of repeating it inside pages.
-- Use `Astro.locals` for request-scoped values set by middleware.
-- API-style routes in `src/pages/*.ts` should return `Response` / `Response.json`, not Express-like objects.
-- Prefer semantic HTML and accessible labels.
-- Keep browser-side JS near zero; the current deliberate exception is the Telegram comments widget.
-- Do not add `client:*` directives or inline scripts unless the feature genuinely requires them.
-- Tailwind utility classes are used heavily in `.astro` files.
-- For long class strings, follow the existing pattern of extracting them into constants above the markup.
-- Reuse existing visual tokens and accessible structures instead of inventing near-duplicates.
-
-## 13. Error Handling
-
-- Fail fast for required server-side configuration, e.g. throw when mandatory env values are missing.
-- In request handlers, catch unknown errors only when you can convert them into an explicit HTTP response.
-- When catching, narrow with `instanceof Error` before reading `.message`.
-- Do not silently swallow fetch or parsing failures.
-- Keep error messages actionable and specific.
-
-## 14. External Fetching, Parsing, and HTML Safety
-
-- Telegram fetching and parsing live in `src/lib/telegram/index.ts`; keep new scraping logic there.
-- Preserve the static proxy whitelist behavior in `src/lib/static-proxy.ts` unless the task explicitly changes the security model.
-- When proxying or forwarding requests, be careful with headers and target validation.
-- `set:html` is already used in a few places; only feed it sanitized or internally generated HTML.
-- If introducing new HTML transformations for feeds or pages, sanitize external content first.
-- Avoid mutating cached data objects in-place when extending cached flows.
-
-## 15. Env and Config Notes
-
-- Never commit real secrets or tokens.
-- Update `.env.example` when introducing, removing, or renaming env variables.
-- Update README docs when env behavior changes.
-- Prefer actual code usage over stale README text if they conflict.
-- Important current code-level env names include `CHANNEL`, `LOCALE`, `TIMEZONE`, `TELEGRAM_HOST`, `STATIC_PROXY`, `COMMENTS`, `REACTIONS`, `NOINDEX`, `NOFOLLOW`, `RSS_BEAUTIFY`, `TAGS`, `LINKS`, `NAVS`, `HEADER_INJECT`, and `FOOTER_INJECT`.
-- Note that `PODCASRT` is the current code-level env key in `header.astro`; keep compatibility in mind unless intentionally correcting it everywhere.
-
-## 16. Build and Deployment Notes
-
-- `astro.config.mjs` selects adapters for Vercel, Cloudflare Pages, Netlify, Node, and EdgeOne.
-- The app is configured with `output: 'server'`.
-- Do not change adapter logic casually; deployment behavior depends on environment detection.
-- If you touch build configuration, run `pnpm build` before finishing.
-
-## 17. Working Style
-
-- Inspect nearby files before editing to match local conventions.
-- Prefer updating existing patterns over introducing new abstractions.
-- Keep comments sparse and explain why, not what.
-- If a task would benefit from automated tests, note that the repo currently lacks a test harness instead of pretending one exists.
-- If you add a real test runner in the future, update `package.json`, this file, and the single-test instructions together.
+- `.slim/clonedeps/repos/HermanMartinus__bearblog/` - `HermanMartinus/bearblog` at `a6cf650886d11461dd1839d02020ca0aee0fee67`; reference for the visitor DOM and default Bear theme contract.
+- `.slim/clonedeps/repos/panr__hugo-theme-terminal/` - `panr/hugo-theme-terminal` at `4acd067c48195ac503541ba75f9259c7158d3792`; reference for Terminal CSS and template structure.
+- `.slim/clonedeps/repos/miantiao-me__astro-aria/` - `miantiao-me/astro-aria` at `15c6eb8143ac55f9ba8d925b43f973ceef046980`; reference for Aria styling and Astro component composition.
