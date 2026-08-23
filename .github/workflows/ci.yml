@@ -46,3 +46,6 @@ jobs:
         env:
           SERVER_ADAPTER: cloudflare_workers
         run: pnpm build
+
+      - name: Validate Worker package
+        run: pnpm exec wrangler deploy --dry-run --outdir /tmp/broadcast-channel-worker

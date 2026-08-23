@@ -15,6 +15,32 @@ Automatic upstream-sync workflows must not write to `main`. They can merge
 unreviewed upstream changes into the deployed branch and make the fork history
 harder to rebase.
 
+## Cloudflare Workers deployment
+
+Production runs on the `broadcast-channel` Worker. The custom domain
+`blog.r3.net.eu.org/*` is declared in `wrangler.jsonc`, and the independent
+validation URL is `https://broadcast-channel.lev1s.workers.dev`.
+
+The legacy `telegram-channel-blog` Pages project is retained as a rollback
+target, but its automatic production and preview builds are disabled. Do not
+deploy this Astro SSR application to Pages: the upstream project supports
+Cloudflare Workers only.
+
+Runtime variables and the automatically provisioned `SESSION` KV binding live
+in Cloudflare. `keep_vars` preserves them on later deployments; never commit
+their values to this repository.
+
+After a tested `main` update, deploy manually from an authenticated machine:
+
+```sh
+SERVER_ADAPTER=cloudflare_workers pnpm build
+pnpm exec wrangler deploy --keep-vars
+```
+
+Verify both the workers.dev URL and the custom domain before considering the
+deployment complete. Workers Builds is not configured yet, so pushing `main`
+alone does not deploy production.
+
 ## Safe upstream update
 
 Start from a clean worktree and record the expected remote commit before doing
@@ -36,7 +62,8 @@ pnpm install --frozen-lockfile
 pnpm lint
 pnpm typecheck
 pnpm test
-pnpm build
+SERVER_ADAPTER=cloudflare_workers pnpm build
+pnpm exec wrangler deploy --dry-run --outdir /tmp/broadcast-channel-dry-run
 ```
 
 After reviewing the range `upstream/main..HEAD`, update the deployment branch
@@ -48,6 +75,7 @@ git branch -f main HEAD
 git switch main
 ```
 
-Keep the dated local backup until the Cloudflare deployment and GitHub Actions
-runs are healthy. Do not use GitHub's **Sync fork** button or merge
-`upstream/main` into this fork.
+Deploy the new `main` to Workers using the commands above. Keep the dated local
+backup until the custom domain, workers.dev URL, and GitHub Actions run are all
+healthy. Do not use GitHub's **Sync fork** button or merge `upstream/main` into
+this fork.

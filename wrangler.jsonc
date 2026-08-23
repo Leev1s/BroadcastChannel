@@ -8,6 +8,14 @@
     "nodejs_compat"
   ],
   "keep_vars": true,
+  "workers_dev": true,
+  "preview_urls": true,
+  "routes": [
+    {
+      "pattern": "blog.r3.net.eu.org/*",
+      "zone_name": "r3.net.eu.org"
+    }
+  ],
   "cache": {
     "enabled": true
   },
