@@ -21,25 +21,27 @@ Production runs on the `broadcast-channel` Worker. The custom domain
 `blog.r3.net.eu.org/*` is declared in `wrangler.jsonc`, and the independent
 validation URL is `https://broadcast-channel.lev1s.workers.dev`.
 
-The legacy `telegram-channel-blog` Pages project is retained as a rollback
-target, but its automatic production and preview builds are disabled. Do not
-deploy this Astro SSR application to Pages: the upstream project supports
-Cloudflare Workers only.
+The legacy `telegram-channel-blog` Pages project has been removed. Do not deploy
+this Astro SSR application to Pages: the upstream project supports Cloudflare
+Workers only.
 
 Runtime variables and the automatically provisioned `SESSION` KV binding live
 in Cloudflare. `keep_vars` preserves them on later deployments; never commit
 their values to this repository.
 
-After a tested `main` update, deploy manually from an authenticated machine:
+Cloudflare Workers Builds is connected to `Leev1s/BroadcastChannel` and deploys
+the `main` branch with the upstream project's official commands:
 
 ```sh
 SERVER_ADAPTER=cloudflare_workers pnpm build
-pnpm exec wrangler deploy --keep-vars
+pnpm exec wrangler deploy
 ```
 
-Verify both the workers.dev URL and the custom domain before considering the
-deployment complete. Workers Builds is not configured yet, so pushing `main`
-alone does not deploy production.
+A push to `main` is the production deployment trigger. The CI workflow remains
+a separate verification gate; it does not deploy. Use the same commands from an
+authenticated local machine only when diagnosing a build or intentionally
+performing a manual recovery. Verify both the workers.dev URL and the custom
+domain before considering a deployment complete.
 
 ## Safe upstream update
 
@@ -75,7 +77,7 @@ git branch -f main HEAD
 git switch main
 ```
 
-Deploy the new `main` to Workers using the commands above. Keep the dated local
-backup until the custom domain, workers.dev URL, and GitHub Actions run are all
-healthy. Do not use GitHub's **Sync fork** button or merge `upstream/main` into
-this fork.
+Wait for the Workers Builds deployment triggered by the `main` push. Keep the
+dated local backup until the custom domain, workers.dev URL, Workers build, and
+GitHub Actions run are all healthy. Do not use GitHub's **Sync fork** button or
+merge `upstream/main` into this fork.
