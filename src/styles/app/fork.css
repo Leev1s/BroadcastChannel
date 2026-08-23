@@ -1,0 +1,25 @@
+/* Personal fork customizations kept separate for low-conflict upstream rebases. */
+@layer base {
+  :root {
+    --background-color: #1d1259;
+    --heading-color: #eee;
+    --text-color: #ddd;
+    --link-color: #61b3ff;
+    --visited-color: #61b3ff;
+    --code-background-color: rgba(255, 255, 255, 0.08);
+    --code-color: #ddd;
+    --blockquote-color: #eee;
+    --accent-color: #ff4500;
+    --border-color: rgba(255, 255, 255, 0.12);
+    --link-hover-color: #ff4500;
+    --muted-color: #aaa;
+    --surface-color: rgba(255, 255, 255, 0.06);
+    --reaction-paid-color: #f3cc65;
+    --reaction-paid-border-color: color-mix(in srgb, var(--reaction-paid-color) 52%, transparent);
+    --reaction-paid-background-color: color-mix(in srgb, var(--reaction-paid-color) 14%, var(--background-color));
+  }
+
+  html {
+    color-scheme: dark;
+  }
+}
